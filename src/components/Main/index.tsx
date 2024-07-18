@@ -1,10 +1,12 @@
-import { Box } from "@mui/material";
+import { Box, Button, Checkbox, FormControlLabel, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
 import useStore from "../../store";
+import DropArea from "../DropArea";
+import UploadImagesView from "../UploadImagesView";
 
 export default function Main() {
-  const [files, setFiles] = useState<FileList | null>(null);
+  const [images, setImages] = useState<Array<File>>([]);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -20,15 +22,10 @@ export default function Main() {
   const setKeepMetadata = useStore((state) => state.setKeepMetadata);
   const setChromaSubsampling = useStore((state) => state.setChromaSubsampling);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFiles(event.target.files);
-    setDownloadUrl(null); // Clear previous download URL
-  };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    if (!files || files.length === 0) {
+    if (images.length === 0) {
       alert("Please select at least one file.");
       return;
     }
@@ -36,7 +33,7 @@ export default function Main() {
     setLoading(true);
 
     const formData = new FormData();
-    Array.from(files).forEach((file) => {
+    images.forEach((file) => {
       formData.append("images", file);
     });
 
@@ -49,7 +46,6 @@ export default function Main() {
 
     try {
       const response = await axios.post("http://localhost:8000/compress", formData, {
-        // https://snap-avif-service.onrender.com
         responseType: "blob",
       });
 
@@ -64,44 +60,39 @@ export default function Main() {
     }
   };
 
+  const handleDeletImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index);
+    setImages(newImages);
+  };
+
   return (
-    <Box flexGrow={1} p={1}>
-      <form onSubmit={handleSubmit}>
-        <input type="file" multiple accept="image/*" onChange={handleFileChange} />
-        <div>
-          <label>Quality:</label>
-          <input type="number" value={quality} onChange={(e) => setQuality(parseInt(e.target.value))} />
-        </div>
-        <div>
-          <label>Effort:</label>
-          <input type="number" value={effort} onChange={(e) => setEffort(parseInt(e.target.value))} />
-        </div>
-        <div>
-          <label>Lossless:</label>
-          <input type="checkbox" checked={lossless} onChange={(e) => setLossless(e.target.checked)} />
-        </div>
-        <div>
-          <label>Chroma Subsampling:</label>
-          <select value={chromaSubsampling} onChange={(e) => setChromaSubsampling(e.target.value as "4:4:4" | "4:2:0")}>
-            <option value="4:4:4">4:4:4</option>
-            <option value="4:2:0">4:2:0</option>
-          </select>
-        </div>
-        <div>
-          <label>Keep Metadata:</label>
-          <input type="checkbox" checked={keepMetadata} onChange={(e) => setKeepMetadata(e.target.checked)} />
-        </div>
-        <button type="submit" disabled={loading}>
+    <Box sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column" }}>
+      <DropArea setImages={setImages} setDownloadUrl={setDownloadUrl} />
+
+      <UploadImagesView images={images} onDelete={(i) => handleDeletImage(i)} />
+
+      <Box component={"form"} onSubmit={handleSubmit} sx={{ flexGrow: 2 }}>
+        <TextField label="Quality" type="number" value={quality} onChange={(e) => setQuality(parseInt(e.target.value))} fullWidth margin="normal" />
+        <TextField label="Effort" type="number" value={effort} onChange={(e) => setEffort(parseInt(e.target.value))} fullWidth margin="normal" />
+        <FormControlLabel control={<Checkbox checked={lossless} onChange={(e) => setLossless(e.target.checked)} />} label="Lossless" />
+        <FormControlLabel control={<Checkbox checked={keepMetadata} onChange={(e) => setKeepMetadata(e.target.checked)} />} label="Keep Metadata" />
+        <Select value={chromaSubsampling} onChange={(e: SelectChangeEvent) => setChromaSubsampling(e.target.value as "4:4:4" | "4:2:0")} fullWidth>
+          <MenuItem value="4:4:4">4:4:4</MenuItem>
+          <MenuItem value="4:2:0">4:2:0</MenuItem>
+        </Select>
+
+        <Button type="submit" variant="contained" color="primary" disabled={loading} fullWidth sx={{ mt: 2 }}>
           {loading ? "Compressing..." : "Upload and Compress"}
-        </button>
-      </form>
-      {downloadUrl && (
-        <div>
-          <a href={downloadUrl} download="compressed_images.zip">
-            Download Compressed Images
-          </a>
-        </div>
-      )}
+        </Button>
+
+        {downloadUrl && (
+          <Box mt={2} textAlign="center">
+            <a href={downloadUrl} download="compressed_images.zip">
+              Download Compressed Images
+            </a>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 }
