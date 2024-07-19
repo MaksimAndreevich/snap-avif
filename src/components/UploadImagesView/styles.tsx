@@ -2,7 +2,9 @@ import { Box, styled } from "@mui/material";
 
 const ScrollContainer = styled(Box)(({ theme }) => ({
   maxHeight: 240,
+  minHeight: 160,
   overflowX: "auto",
+  overflowY: "hidden",
   display: "flex",
   marginTop: 8,
 }));

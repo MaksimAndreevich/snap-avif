@@ -1,9 +1,12 @@
-import { Box, Button, Checkbox, FormControlLabel, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
+import { Box, Button, Link, Stack } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
 import useStore from "../../store";
 import DropArea from "../DropArea";
+import RadioOption from "../RadioOption";
+import Switcher from "../Switcher";
 import UploadImagesView from "../UploadImagesView";
+import ValueSlider from "../ValueSlider";
 
 export default function Main() {
   const [images, setImages] = useState<Array<File>>([]);
@@ -66,30 +69,62 @@ export default function Main() {
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column" }}>
+    <Box sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
       <DropArea setImages={setImages} setDownloadUrl={setDownloadUrl} />
 
-      <UploadImagesView images={images} onDelete={(i) => handleDeletImage(i)} />
+      {(images.length && <UploadImagesView images={images} onDelete={handleDeletImage} />) || null}
 
       <Box component={"form"} onSubmit={handleSubmit} sx={{ flexGrow: 2 }}>
-        <TextField label="Quality" type="number" value={quality} onChange={(e) => setQuality(parseInt(e.target.value))} fullWidth margin="normal" />
-        <TextField label="Effort" type="number" value={effort} onChange={(e) => setEffort(parseInt(e.target.value))} fullWidth margin="normal" />
-        <FormControlLabel control={<Checkbox checked={lossless} onChange={(e) => setLossless(e.target.checked)} />} label="Lossless" />
-        <FormControlLabel control={<Checkbox checked={keepMetadata} onChange={(e) => setKeepMetadata(e.target.checked)} />} label="Keep Metadata" />
-        <Select value={chromaSubsampling} onChange={(e: SelectChangeEvent) => setChromaSubsampling(e.target.value as "4:4:4" | "4:2:0")} fullWidth>
-          <MenuItem value="4:4:4">4:4:4</MenuItem>
-          <MenuItem value="4:2:0">4:2:0</MenuItem>
-        </Select>
+        <Stack>
+          <ValueSlider
+            title="Качество"
+            setValue={setQuality}
+            min={1}
+            max={100}
+            defaultValue={50}
+            desc="Компромисс между качеством изображения и размером файла. 1 - самое низкое качество изображения, но наименьший размер файла. 100 - самое высокое качество изображения, но наибольший размер файла.
+"
+          />
+          <ValueSlider
+            title="Усилие CPU"
+            setValue={setEffort}
+            min={0}
+            max={9}
+            defaultValue={4}
+            desc="Этот параметр управляет тем, сколько процессорного времени будет потрачено на сжатие изображения. Чем больше значение, тем более интенсивно будет сжатие, что приведет к меньшему размеру файла, но это займет больше времени. Минимальное значение означает, что компрессия будет выполняться очень быстро, но размер выходного файла будет больше"
+          />
+
+          <Switcher
+            checked={lossless}
+            title="Сжатие без потерь"
+            setValue={setLossless}
+            desc="Изображение будет сжато без потерь, что означает, что все данные изображения сохраняются без изменений. Качество изображения остается неизменным и точно таким же, как у оригинала. Размер файла может быть больше по сравнению с сжатием с потерями (lossy compression), так как все детали изображения сохраняются. Подходит для случаев, когда важно сохранить максимальное качество изображения (например, для научных данных, архивирования или обработки изображений, где важны все детали)."
+          />
+          <Switcher
+            checked={keepMetadata}
+            title="Сохранить метаданные"
+            setValue={setKeepMetadata}
+            desc="Сохраняет всю дополнительную информацию об изображении, что может быть полезно для профессиональной обработки и архивирования. Удаление метаданных уменьшает размер файла и защищает личные данные, но теряет всю дополнительную информацию об изображении. Выбор значения зависит от ваших потребностей: приоритет сохранения информации или уменьшения размера файла и защиты данных."
+          />
+
+          <RadioOption
+            title="Субдискретизация цвета"
+            options={["4:4:4", "4:2:0"]}
+            value={chromaSubsampling}
+            desc="Метод уменьшения размера изображения, при котором сохраняется меньше цветовой информации, чтобы сэкономить место, поскольку человеческий глаз менее чувствителен к цвету, чем к яркости. 4:4:4 — все цвета сохраняются, лучшее качество, большой файл. 4:2:0 — сохраняются не все цвета, немного хуже качество, маленький файл."
+            handleChange={(e, value) => setChromaSubsampling(value)}
+          />
+        </Stack>
 
         <Button type="submit" variant="contained" color="primary" disabled={loading} fullWidth sx={{ mt: 2 }}>
-          {loading ? "Compressing..." : "Upload and Compress"}
+          {loading ? "Сжатие..." : "Начать сжатие"}
         </Button>
 
         {downloadUrl && (
           <Box mt={2} textAlign="center">
-            <a href={downloadUrl} download="compressed_images.zip">
-              Download Compressed Images
-            </a>
+            <Link href={downloadUrl} download="compressed_images.zip">
+              Скачать сжатые изображения
+            </Link>
           </Box>
         )}
       </Box>

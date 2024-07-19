@@ -5,13 +5,13 @@ interface IMainStore {
   effort: number;
   lossless: boolean;
   keepMetadata: boolean;
-  chromaSubsampling: "4:4:4" | "4:2:0";
+  chromaSubsampling: string;
 
   setQuality: (quality: number) => void;
   setEffort: (effort: number) => void;
   setLossless: (lossless: boolean) => void;
   setKeepMetadata: (keepMetadata: boolean) => void;
-  setChromaSubsampling: (chromaSubsampling: "4:4:4" | "4:2:0") => void;
+  setChromaSubsampling: (chromaSubsampling: string) => void;
 }
 
 const useStore = create<IMainStore>()((set) => ({
