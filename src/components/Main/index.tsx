@@ -1,9 +1,10 @@
-import { Box, Button, Link, Stack } from "@mui/material";
+import { Box, Button, Stack } from "@mui/material";
 import axios from "axios";
 import { useState } from "react";
 import useStore from "../../store";
 import DropArea from "../DropArea";
 import RadioOption from "../RadioOption";
+import Stats from "../Stats";
 import Switcher from "../Switcher";
 import UploadImagesView from "../UploadImagesView";
 import ValueSlider from "../ValueSlider";
@@ -24,6 +25,7 @@ export default function Main() {
   const setLossless = useStore((state) => state.setLossless);
   const setKeepMetadata = useStore((state) => state.setKeepMetadata);
   const setChromaSubsampling = useStore((state) => state.setChromaSubsampling);
+  const setStats = useStore((state) => state.setStats);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -51,6 +53,10 @@ export default function Main() {
       const response = await axios.post("http://localhost:8000/compress", formData, {
         responseType: "blob",
       });
+
+      const statsHeader = response.headers["x-stats"];
+      const stats = statsHeader ? JSON.parse(statsHeader) : null;
+      setStats(stats);
 
       const blob = new Blob([response.data], { type: response.data.type });
       const url = window.URL.createObjectURL(blob);
@@ -116,15 +122,18 @@ export default function Main() {
           />
         </Stack>
 
-        <Button type="submit" variant="contained" color="primary" disabled={loading} fullWidth sx={{ mt: 2 }}>
-          {loading ? "Сжатие..." : "Начать сжатие"}
-        </Button>
+        <Box textAlign="center">
+          <Button type="submit" variant="contained" color="primary" disabled={loading} fullWidth sx={{ maxWidth: 320 }}>
+            {loading ? "Сжатие..." : "Начать сжатие"}
+          </Button>
+          <Stats />
+        </Box>
 
         {downloadUrl && (
           <Box mt={2} textAlign="center">
-            <Link href={downloadUrl} download="compressed_images.zip">
+            <Button href={downloadUrl} download="compressed_images.zip" variant="contained" color="success">
               Скачать сжатые изображения
-            </Link>
+            </Button>
           </Box>
         )}
       </Box>
