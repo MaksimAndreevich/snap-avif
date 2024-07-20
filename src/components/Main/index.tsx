@@ -50,7 +50,10 @@ export default function Main() {
     formData.append("keepMetadata", keepMetadata.toString());
 
     try {
-      const response = await axios.post("http://localhost:8000/compress", formData, {
+      const response = await axios.post("https://snap-avif-server.vercel.app/compress", formData, {
+        // TODO:add to envs
+        // https://snap-avif-server.vercel.app//compress'
+        // "http://localhost:8000/compress"
         responseType: "blob",
       });
 

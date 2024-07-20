@@ -35,8 +35,12 @@ export default function DropArea({ setImages, setDownloadUrl }: IDropAreaProps) 
   };
 
   const handleFiles = (files: FileList) => {
+    if (files.length > 1) {
+      return alert("В данный момент ресурсы сервера ограничены. Вы можете сжимать по ОДНОМУ изображению");
+    }
     const fileArray = Array.from(files);
     const fiteredByImages = fileArray.filter((file) => file.type.startsWith("image/"));
+
     setImages(fiteredByImages);
   };
 

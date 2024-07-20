@@ -1,6 +1,5 @@
 import { Box } from "@mui/material";
 import React from "react";
-import Footer from "./components/Footer/intex";
 import Header from "./components/Header";
 import Main from "./components/Main";
 
@@ -9,7 +8,7 @@ const App: React.FC = () => {
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <Header />
       <Main />
-      <Footer />
+      {/* <Footer /> */}
     </Box>
   );
 };
